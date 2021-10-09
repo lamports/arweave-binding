@@ -124,7 +124,7 @@ export const mintNFT = async (
 } | void> => {
   if (!wallet?.publicKey) return;
 
-  const metadata = {
+  const metadataJSON = {
     name: imageAndMetaData.manifestJson.name,
     symbol: imageAndMetaData.manifestJson.symbol,
     description: imageAndMetaData.manifestJson.description,
@@ -212,11 +212,11 @@ export const mintNFT = async (
 
   const metadataAccount = await createMetadata(
     new Data({
-      symbol: metadata.symbol,
-      name: metadata.name,
+      symbol: metadataJSON.symbol,
+      name: metadataJSON.name,
       uri: " ".repeat(64), // size of url for arweave
-      sellerFeeBasisPoints: metadata.seller_fee_basis_points,
-      creators: metadata.properties.creators,
+      sellerFeeBasisPoints: metadataJSON.seller_fee_basis_points,
+      creators: metadataJSON.properties.creators,
     }),
     payerPublicKey,
     mintKey,
@@ -224,16 +224,6 @@ export const mintNFT = async (
     instructions,
     wallet.publicKey.toBase58()
   );
-
-  // TODO: enable when using payer account to avoid 2nd popup
-  // const block = await connection.getRecentBlockhash('singleGossip');
-  // instructions.push(
-  //   SystemProgram.transfer({
-  //     fromPubkey: wallet.publicKey,
-  //     toPubkey: payerPublicKey,
-  //     lamports: 0.5 * LAMPORTS_PER_SOL // block.feeCalculator.lamportsPerSignature * 3 + mintRent, // TODO
-  //   }),
-  // );
 
   const { txid } = await sendTransactionWithRetry(
     connection,
@@ -268,20 +258,20 @@ export const mintNFT = async (
 
   // realFiles.map(f => data.append('file[]', f));
 
-  const manifestContent = fs
+  const metadataContent = fs
     .readFileSync(imageAndMetaData.manifestPath)
     .toString()
     .replace("0", "image")
     .replace("0", "image");
-  const manifest = JSON.parse(manifestContent);
+  const metadata = JSON.parse(metadataContent);
 
-  const manifestBuffer = Buffer.from(JSON.stringify(manifest));
+  const metadataBuffer = Buffer.from(JSON.stringify(metadata));
 
   data.append("file[]", fs.createReadStream(imageAndMetaData.imagePath), {
     filename: `image.png`,
     contentType: "image/png",
   });
-  data.append("file[]", manifestBuffer, "metadata.json");
+  data.append("file[]", metadataBuffer, "metadata.json");
 
   // data.append()
 
@@ -310,7 +300,6 @@ export const mintNFT = async (
 
   // TODO: connect to testnet arweave
   const arweaveLink = `https://arweave.net/${metadataFile.transactionId}`;
-  //const arweaveLink = `http://localhost:1984/${metadataFile.transactionId}`;
 
   await updateMetadata(
     new Data({
