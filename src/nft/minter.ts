@@ -31,6 +31,7 @@ import { LocalFileData } from "get-file-object-from-local-path";
 import FormData from "form-data";
 import crypto from "crypto";
 import log from "loglevel";
+import { getAssetCostToStore } from "./fee.arweave";
 
 export const AR_SOL_HOLDER_ID = new PublicKey(
   "HvwC9QSAzvGXhhVrgPmauVwFWcYZhne3hVot9EbHuFTm"
@@ -65,13 +66,10 @@ export interface MetadataJSON {
 
 export const getImagesAndMetadata = (
   currentFileIndex: number,
-  requiredFiles: number
+  requiredFiles: number,
+  imagesPath: string
 ): ImageMetadata[] => {
   const newFiles: string[] = [];
-  const imagesPath: string =
-    process.env.IMAGE_FOLDER == undefined
-      ? "../images"
-      : process.env.IMAGE_FOLDER;
   const imageAndMetaData: ImageMetadata[] = [];
   //console.log(imagesPath);
   for (
@@ -80,7 +78,7 @@ export const getImagesAndMetadata = (
     index++
   ) {
     const value = fs
-      .readdirSync(imagesPath.toString())
+      .readdirSync(imagesPath)
       .map((file) => path.join(imagesPath, file));
     newFiles.push(...value);
   }
@@ -115,7 +113,7 @@ export const getImagesAndMetadata = (
   return imageAndMetaData;
 };
 
-const mintNFT = async (
+export const mintNFT = async (
   connection: Connection,
   wallet: anchor.Wallet | undefined,
   env: string,
@@ -291,8 +289,8 @@ const mintNFT = async (
   const result: any = (
     await axios.post(
       env.startsWith("mainnet-beta")
-        ? "https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFileProd2"
-        : "https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFile2",
+        ? "https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFile4"
+        : "https://us-central1-principal-lane-200702.cloudfunctions.net/uploadFile4",
       data,
       { headers: data.getHeaders() }
     )
@@ -303,61 +301,66 @@ const mintNFT = async (
   const metadataFile = result["messages"].find(
     (m: any) => m.filename === RESERVED_TXN_MANIFEST
   );
-  if (metadataFile?.transactionId && wallet.publicKey) {
-    const updateInstructions: TransactionInstruction[] = [];
-    const updateSigners: Keypair[] = [];
 
-    // TODO: connect to testnet arweave
-    const arweaveLink = `https://arweave.net/${metadataFile.transactionId}`;
-    await updateMetadata(
-      new Data({
-        name: metadata.name,
-        symbol: metadata.symbol,
-        uri: arweaveLink,
-        creators: metadata.properties.creators,
-        sellerFeeBasisPoints: metadata.seller_fee_basis_points,
-      }),
-      undefined,
-      undefined,
-      mintKey,
-      payerPublicKey,
-      updateInstructions,
-      metadataAccount
-    );
+  console.log("META FILEEE", metadataFile);
 
-    updateInstructions.push(
-      Token.createMintToInstruction(
-        TOKEN_PROGRAM_ID,
-        toPublicKey(mintKey),
-        toPublicKey(recipientKey),
-        toPublicKey(payerPublicKey),
-        [],
-        1
-      )
-    );
-    // // In this instruction, mint authority will be removed from the main mint, while
-    // // minting authority will be maintained for the Printing mint (which we want.)
-    await createMasterEdition(
-      maxSupply !== undefined ? new anchor.BN(maxSupply) : undefined,
-      mintKey,
-      payerPublicKey,
-      payerPublicKey,
-      payerPublicKey,
-      updateInstructions
-    );
+  //if (metadataFile?.transactionId && wallet.publicKey) {
+  const updateInstructions: TransactionInstruction[] = [];
+  const updateSigners: Keypair[] = [];
 
-    const txid = await sendTransactionWithRetry(
-      connection,
-      wallet,
-      updateInstructions,
-      updateSigners
-    );
-  }
+  // TODO: connect to testnet arweave
+  const arweaveLink = `https://arweave.net/${metadataFile.transactionId}`;
+  //const arweaveLink = `http://localhost:1984/${metadataFile.transactionId}`;
 
+  await updateMetadata(
+    new Data({
+      name: metadata.name,
+      symbol: metadata.symbol,
+      uri: arweaveLink,
+      creators: metadata.properties.creators,
+      sellerFeeBasisPoints: metadata.seller_fee_basis_points,
+    }),
+    undefined,
+    undefined,
+    mintKey,
+    payerPublicKey,
+    updateInstructions,
+    metadataAccount
+  );
+
+  updateInstructions.push(
+    Token.createMintToInstruction(
+      TOKEN_PROGRAM_ID,
+      toPublicKey(mintKey),
+      toPublicKey(recipientKey),
+      toPublicKey(payerPublicKey),
+      [],
+      1
+    )
+  );
+  // // In this instruction, mint authority will be removed from the main mint, while
+  // // minting authority will be maintained for the Printing mint (which we want.)
+  await createMasterEdition(
+    maxSupply !== undefined ? new anchor.BN(maxSupply) : undefined,
+    mintKey,
+    payerPublicKey,
+    payerPublicKey,
+    payerPublicKey,
+    updateInstructions
+  );
+
+  const txids = await sendTransactionWithRetry(
+    connection,
+    wallet,
+    updateInstructions,
+    updateSigners
+  );
+  //}
+  console.log("Transaction ID , ", txids);
   console.log("META DATAAA ACCCOUNT ", metadataAccount);
 
-  return undefined;
-  //return { metadataAccount };
+  //return undefined;
+  return { metadataAccount };
 };
 
 const prepPayForFilesTxn = async (
@@ -371,12 +374,16 @@ const prepPayForFilesTxn = async (
   const instructions: TransactionInstruction[] = [];
   const signers: Keypair[] = [];
 
+  const arweaveFee = await getAssetCostToStore(files);
+
+  console.log("Arweave Fee in Sols", arweaveFee);
+
   if (wallet.publicKey) {
     instructions.push(
       SystemProgram.transfer({
         fromPubkey: wallet.publicKey,
         toPubkey: AR_SOL_HOLDER_ID,
-        lamports: 2300000, //await getAssetCostToStore(files),
+        lamports: 2300000, //arweaveFee,
       })
     );
   }

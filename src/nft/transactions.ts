@@ -165,7 +165,7 @@ export async function sendSignedTransaction({
   );
 
   console.log("Started awaiting confirmation for", txid);
-  console.log("IN network, ", await connection.getClusterNodes());
+  //console.log("IN network, ", await connection.getClusterNodes());
 
   let done = false;
   (async () => {
