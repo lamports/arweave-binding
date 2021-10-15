@@ -31,7 +31,7 @@ import { LocalFileData } from "get-file-object-from-local-path";
 import FormData from "form-data";
 import crypto from "crypto";
 import log from "loglevel";
-import { getAssetCostToStore } from "./fee.arweave";
+import { getAssetCostToStore } from "./fee.arweave.sol";
 
 export const AR_SOL_HOLDER_ID = new PublicKey(
   "HvwC9QSAzvGXhhVrgPmauVwFWcYZhne3hVot9EbHuFTm"

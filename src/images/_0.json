@@ -1,0 +1,49 @@
+{
+    "name": "Solgen #3974",
+    "symbol": "solg",
+    "description": "7777 awe-inspiring semi-generative fractals that transcend reality. Each of these psychedelic pieces will both soothe and expand horizons with their otherworldly aura.",
+    "seller_fee_basis_points": 250,
+    "image": "https://arweave.net/GPz7cJot1vB20HF87YyqpfGpNry7ZBRvfqO2AteDxsU?ext=png",
+    "external_url": "https://solgen.io",
+    "attributes": [
+    {
+    "trait_type": "rarity",
+    "value": "uncommon"
+    }
+    ],
+    "properties": {
+    "files": [
+    {
+    "uri": "https://arweave.net/GPz7cJot1vB20HF87YyqpfGpNry7ZBRvfqO2AteDxsU?ext=png",
+    "type": "https://arweave.net/GPz7cJot1vB20HF87YyqpfGpNry7ZBRvfqO2AteDxsU?ext=png"
+    }
+    ],
+    "category": "image",
+    "creators": [
+    {
+    "address": "A3fcEBpN1g7xjZte8hTAt7NgPT9Lh9WvdKEb9TogSTis",
+    "share": 35
+    },
+    {
+    "address": "7E2errRantVXQH5rBPGnDzTPrHfrviLdA2xRcUKG4tm8",
+    "share": 25
+    },
+    {
+    "address": "GbYdWJwoaEpFbXfQYQpeohYP6tCtsP83J6v36azT1RwL",
+    "share": 20
+    },
+    {
+    "address": "BHwhBBDXehkfUooPnwfAqXjd1SpPRPAgiZWLoPXzkzKp",
+    "share": 20
+    },
+    {
+    "address": "7pPbdAxghjNM1zA7Ra3LxYNMZR1TRn5o79JqxYxiYNhT",
+    "share": 0
+    }
+    ]
+    },
+    "collection": {
+    "name": "Solgen Alpha",
+    "family": "Solgen"
+    }
+    }
